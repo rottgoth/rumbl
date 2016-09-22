@@ -1467,7 +1467,54 @@ require.register("web/static/js/app.js", function(exports, require, module) {
 require("phoenix_html");
 });
 
-;require.register("web/static/js/socket.js", function(exports, require, module) {
+;require.register("web/static/js/player.js", function(exports, require, module) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+var Player = {
+  player: null,
+
+  init: function init(domId, playerId, onReady) {
+    var _this = this;
+
+    window.onYouTubeIframeAPIReady = function () {
+      _this.onIframeReady(domId, playerId, onReady);
+    };
+    var youtubeScriptTag = document.createElement("script");
+    youtubeScriptTag.src = "//www.youtube.com/iframe_api";
+    document.head.appendChild(youtubeScriptTag);
+  },
+  onIframeReady: function onIframeReady(domId, playerId, _onReady) {
+    var _this2 = this;
+
+    this.player = new YT.Player(domId, {
+      height: "360",
+      width: "420",
+      videoId: playerId,
+      events: {
+        "onReady": function onReady(event) {
+          return _onReady(event);
+        },
+        "onStateChange": function onStateChange(event) {
+          return _this2.onPlayerStateChange(event);
+        }
+      }
+    });
+  },
+  onPlayerStateChange: function onPlayerStateChange(event) {},
+  getCurrentTime: function getCurrentTime() {
+    return Math.floor(this.player.getCurrentTime() * 1000);
+  },
+  seekTo: function seekTo(millsec) {
+    return this.player.seekTo(millsec / 1000);
+  }
+};
+exports.default = Player;
+});
+
+require.register("web/static/js/socket.js", function(exports, require, module) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
