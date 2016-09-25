@@ -1647,10 +1647,24 @@ var Video = {
     });
   },
   onReady: function onReady(videoId, socket) {
+    var _this2 = this;
+
     var msgContainer = document.getElementById("msg-container");
     var msgInput = document.getElementById("msg-input");
     var postButton = document.getElementById("msg-submit");
     var vidChannel = socket.channel("videos:" + videoId);
+
+    postButton.addEventListener("click", function (e) {
+      var payload = { body: msgInput.value, at: _player2.default.getCurrentTime() };
+      vidChannel.push("new_annotation", payload).receive("error", function (e) {
+        return console.log(e);
+      });
+      msgInput.value = "";
+    });
+
+    vidChannel.on("new_annotation", function (resp) {
+      _this2.renderAnnotation(msgContainer, resp);
+    });
 
     vidChannel.join().receive("ok", function (resp) {
       return console.log("joined the video channel", resp);
@@ -1662,6 +1676,22 @@ var Video = {
       var count = _ref.count;
       return console.log("PING", count);
     });
+  },
+  esc: function esc(str) {
+    var div = document.createElement("div");
+    div.appendChild(document.createTextNode(str));
+    return div.innerHTML;
+  },
+  renderAnnotation: function renderAnnotation(msgContainer, _ref2) {
+    var user = _ref2.user;
+    var body = _ref2.body;
+    var at = _ref2.at;
+
+    var template = document.createElement("div");
+
+    template.innerHTML = "\n    <a href=\"#\" data-seek=\"" + this.esc(at) + "\">\n      <b>" + this.esc(user.username) + "</b>: " + this.esc(body) + "\n    </a>\n    ";
+    msgContainer.appendChild(template);
+    msgContainer.scrollTop = msgContainer.scrollHeight;
   }
 };
 exports.default = Video;
