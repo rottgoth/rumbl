@@ -1466,13 +1466,22 @@ require.register("web/static/js/app.js", function(exports, require, module) {
 
 require("phoenix_html");
 
-var _player = require("./player");
+var _socket = require("./socket");
 
-var _player2 = _interopRequireDefault(_player);
+var _socket2 = _interopRequireDefault(_socket);
+
+var _video = require("./video");
+
+var _video2 = _interopRequireDefault(_video);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-// Brunch automatically concatenates all files in your
+// Import local files
+//
+// Local files can be imported directly using relative
+// paths "./socket" or full ones "web/static/js/socket".
+
+_video2.default.init(_socket2.default, document.getElementById("video")); // Brunch automatically concatenates all files in your
 // watched paths. Those paths can be configured at
 // config.paths.watched in "brunch-config.js".
 //
@@ -1485,23 +1494,9 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 //
 // If you no longer want to use a dependency, remember
 // to also remove its path from "config.paths.watched".
-var video = document.getElementById("video");
-
-// Import local files
-//
-// Local files can be imported directly using relative
-// paths "./socket" or full ones "web/static/js/socket".
-
-// import socket from "./socket"
-
-if (video) {
-  _player2.default.init(video.id, video.getAttribute("data-player-id"), function () {
-    console.log("player ready!");
-  });
-}
 });
 
-;require.register("web/static/js/player.js", function(exports, require, module) {
+require.register("web/static/js/player.js", function(exports, require, module) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -1557,7 +1552,17 @@ Object.defineProperty(exports, "__esModule", {
 
 var _phoenix = require("phoenix");
 
-var socket = new _phoenix.Socket("/socket", { params: { token: window.userToken } });
+var socket = new _phoenix.Socket("/socket", {
+  params: { token: window.userToken },
+  logger: function logger(kind, msg, data) {
+    console.log(kind + ": " + msg, data);
+  }
+}); // NOTE: The contents of this file will only be executed if
+// you uncomment its entry in "web/static/js/app.js".
+
+// To use Phoenix channels, the first step is to import Socket
+// and connect at the socket path in "lib/my_app/endpoint.ex":
+exports.default = socket;
 
 // When you connect, you'll often need to authenticate the client.
 // For example, imagine you have an authentication plug, `MyAuth`,
@@ -1603,25 +1608,66 @@ var socket = new _phoenix.Socket("/socket", { params: { token: window.userToken 
 // Finally, pass the token on connect as below. Or remove it
 // from connect if you don't care about authentication.
 
-// NOTE: The contents of this file will only be executed if
-// you uncomment its entry in "web/static/js/app.js".
-
-// To use Phoenix channels, the first step is to import Socket
-// and connect at the socket path in "lib/my_app/endpoint.ex":
-socket.connect();
+// socket.connect()
 
 // Now that you are connected, you can join channels with a topic:
-var channel = socket.channel("topic:subtopic", {});
-channel.join().receive("ok", function (resp) {
-  console.log("Joined successfully", resp);
-}).receive("error", function (resp) {
-  console.log("Unable to join", resp);
+// let channel = socket.channel("topic:subtopic", {})
+// channel.join()
+//   .receive("ok", resp => { console.log("Joined successfully", resp) })
+//   .receive("error", resp => { console.log("Unable to join", resp) })
+
+// export default socket
 });
 
-exports.default = socket;
+;require.register("web/static/js/video.js", function(exports, require, module) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
 });
 
-;require.alias("phoenix_html/priv/static/phoenix_html.js", "phoenix_html");
+var _player = require("./player");
+
+var _player2 = _interopRequireDefault(_player);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var Video = {
+  init: function init(socket, element) {
+    var _this = this;
+
+    if (!element) {
+      return;
+    }
+    var playerId = element.getAttribute("data-player-id");
+    var videoId = element.getAttribute("data-id");
+    socket.connect();
+    _player2.default.init(element.id, playerId, function () {
+      _this.onReady(videoId, socket);
+    });
+  },
+  onReady: function onReady(videoId, socket) {
+    var msgContainer = document.getElementById("msg-container");
+    var msgInput = document.getElementById("msg-input");
+    var postButton = document.getElementById("msg-submit");
+    var vidChannel = socket.channel("videos:" + videoId);
+
+    vidChannel.join().receive("ok", function (resp) {
+      return console.log("joined the video channel", resp);
+    }).receive("error", function (reason) {
+      return console.log("join failed", reason);
+    });
+
+    vidChannel.on("ping", function (_ref) {
+      var count = _ref.count;
+      return console.log("PING", count);
+    });
+  }
+};
+exports.default = Video;
+});
+
+require.alias("phoenix_html/priv/static/phoenix_html.js", "phoenix_html");
 require.alias("phoenix/priv/static/phoenix.js", "phoenix");require.register("___globals___", function(exports, require, module) {
   
 });})();require('___globals___');
