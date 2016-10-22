@@ -1,0 +1,26 @@
+
+APP="rumbl"
+
+BUILD_HOST="54.153.13.201"
+BUILD_USER="builder"
+BUILD_AT="/tmp/edeliver/rumbl/builds"
+
+STAGING_HOSTS="52.53.159.106"
+STAGING_USER="deployer"
+DELIVER_TO="/home/rumbl"
+
+# For *Phoenix* projects, symlink prod.secret.exs to our tmp source
+pre_erlang_get_and_update_deps() {
+  local _prod_secret_path="/home/builder/prod.secret.exs"
+  if [ "$TARGET_MIX_ENV" = "prod" ]; then
+    __sync_remote "
+      ln -sfn '$_prod_secret_path' '$BUILD_AT/config/prod.secret.exs'
+    "
+  fi
+  local _staging_secret_path="/home/builder/staging.secret.exs"
+  if [ "$TARGET_MIX_ENV" = "staging" ]; then
+    __sync_remote "
+      ln -sfn '$_staging_secret_path' '$BUILD_AT/config/staging.secret.exs'
+    "
+  fi
+}

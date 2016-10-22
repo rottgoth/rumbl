@@ -23,7 +23,7 @@ defmodule Rumbl.Mixfile do
   def application do
     [mod: {Rumbl, []},
      applications: [:phoenix, :phoenix_pubsub, :phoenix_html, :cowboy, :logger, :gettext,
-                    :phoenix_ecto, :postgrex, :comeonin, :info_sys]]
+                    :phoenix_ecto, :postgrex, :comeonin, :info_sys, :edeliver]]
   end
 
   # Specifies which paths to compile per environment.
@@ -43,7 +43,10 @@ defmodule Rumbl.Mixfile do
      {:gettext, "~> 0.11"},
      {:cowboy, "~> 1.0"},
      {:info_sys, in_umbrella: true},
-     {:comeonin, "~> 2.5"}]
+     {:comeonin, "~> 2.5"},
+     {:edeliver, "~> 1.4.0"},
+     {:distillery, ">= 0.8.0", warn_missing: false},
+   ]
   end
 
   # Aliases are shortcuts or tasks specific to the current project.
